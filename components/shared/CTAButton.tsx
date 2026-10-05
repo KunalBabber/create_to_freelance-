@@ -1,11 +1,11 @@
 'use client';
 
 import { useCallback } from 'react';
-import { course } from '@/data/course';
+import { landingCourse } from '@/data/landing-course';
 
 export function useCheckout() {
   const handleCheckout = useCallback(() => {
-    const url = course.checkoutUrl;
+    const url = landingCourse.checkoutUrl;
     if (url && url.startsWith('http')) {
       window.open(url, '_blank', 'noopener,noreferrer');
     } else if (url && url.startsWith('/')) {
@@ -48,13 +48,13 @@ export function CTAButton({
   };
 
   const base =
-    'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50';
+    'inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50';
 
   const variants = {
     primary:
-      'bg-gradient-to-r from-purple-600 to-electric-600 text-white px-7 py-3.5 text-base hover:shadow-[0_0_30px_-5px_hsl(263_85%_62%/0.6)] hover:scale-[1.02] active:scale-[0.98]',
+      'bg-blue-700 text-white px-7 py-3.5 text-base shadow-sm hover:bg-blue-800',
     secondary:
-      'glass-card text-foreground px-7 py-3.5 text-base hover:border-purple-500/50 hover:bg-secondary/40',
+      'border border-border bg-white text-foreground px-7 py-3.5 text-base hover:bg-slate-50',
     ghost: 'text-muted-foreground hover:text-foreground px-4 py-2 text-sm',
   };
 

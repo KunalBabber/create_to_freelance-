@@ -1,36 +1,38 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Manrope } from 'next/font/google';
 
-const inter = Inter({ subsets: ['latin'] });
+const manrope = Manrope({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Creator to Freelancer | Canva, Video Editing, AI & Freelancing',
+  metadataBase: new URL(
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'
+  ),
+  title: 'Creator to Freelancer | Canva, AI & Video Editing Course',
   description:
-    'Learn Canva, social media content creation, video editing, AI workflows, portfolio building and client acquisition with a practical creator-to-freelancer roadmap.',
+    'A beginner-friendly Hindi and Hinglish course to learn Canva, AI tools, Reels editing, branding and practical portfolio projects. One-time payment ₹499.',
   keywords: [
     'Canva course',
     'video editing course',
-    'freelancing course',
-    'social media design',
+    'beginner creative course',
+    'Hindi Hinglish course',
     'AI for creators',
     'content creation',
-    'portfolio building',
-    'client acquisition',
-    'freelance career',
+    'creative projects',
+    '₹499 course',
   ],
   openGraph: {
-    title: 'Creator to Freelancer | Canva, Video Editing, AI & Freelancing',
+    title: 'Creator to Freelancer | Canva, AI & Video Editing Course',
     description:
-      'Learn Canva, social media content creation, video editing, AI workflows, portfolio building and client acquisition with a practical creator-to-freelancer roadmap.',
+      'Learn Canva, AI tools, Reels editing, branding and practical portfolio projects in Hindi and Hinglish for ₹499.',
     type: 'website',
     siteName: 'Creator to Freelancer',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Creator to Freelancer | Canva, Video Editing, AI & Freelancing',
+    title: 'Creator to Freelancer | Canva, AI & Video Editing Course',
     description:
-      'Learn Canva, social media content creation, video editing, AI workflows, portfolio building and client acquisition with a practical creator-to-freelancer roadmap.',
+      'A practical Hindi and Hinglish course for beginners. Learn Canva, AI, video editing and build real projects for ₹499.',
   },
   alternates: {
     canonical: '/',
@@ -46,11 +48,12 @@ const courseStructuredData = {
   '@type': 'Course',
   name: 'Creator to Freelancer',
   description:
-    'Learn Canva, social media content creation, video editing, AI workflows, portfolio building and client acquisition with a practical creator-to-freelancer roadmap.',
+    'A beginner-friendly Hindi and Hinglish course to learn Canva, AI tools, Reels editing and practical creative projects.',
   provider: {
     '@type': 'Organization',
     name: 'Creator to Freelancer',
   },
+  offers: { '@type': 'Offer', price: '499', priceCurrency: 'INR' },
 };
 
 const faqStructuredData = {
@@ -60,34 +63,22 @@ const faqStructuredData = {
     {
       '@type': 'Question',
       name: 'Is this course beginner friendly?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Yes. The course is designed to take you from zero experience to building a professional portfolio and reaching out to clients.',
-      },
+      acceptedAnswer: { '@type': 'Answer', text: 'Yes. The course is designed for complete beginners.' },
     },
     {
       '@type': 'Question',
-      name: 'Do I need previous design experience?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'No prior design experience is required. The Canva Mastery module covers everything from the ground up.',
-      },
+      name: 'Which language is used?',
+      acceptedAnswer: { '@type': 'Answer', text: 'The course is explained in Hindi and Hinglish.' },
     },
     {
       '@type': 'Question',
-      name: 'How long will I have access?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'You get lifetime access to all course content, including future updates.',
-      },
+      name: 'What will I learn?',
+      acceptedAnswer: { '@type': 'Answer', text: 'You will learn Canva, Canva AI tools, Reels/video editing, thumbnail design, branding and practical project creation.' },
     },
     {
       '@type': 'Question',
-      name: 'Does this guarantee freelance income?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'No. The program teaches skills, portfolio building and client acquisition strategies, but freelance results depend on skill development, execution, market conditions and individual effort.',
-      },
+      name: 'What is the course price?',
+      acceptedAnswer: { '@type': 'Answer', text: 'The complete course costs ₹499 as a one-time payment.' },
     },
   ],
 };
@@ -98,7 +89,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <head>
         <script
           type="application/ld+json"
@@ -109,7 +100,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
         />
       </head>
-      <body className={`${inter.className} bg-background text-foreground antialiased`}>
+      <body className={`${manrope.className} bg-background text-foreground antialiased`}>
         {children}
       </body>
     </html>
