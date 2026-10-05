@@ -2,11 +2,22 @@
 
 import { useCallback } from 'react';
 import { landingCourse } from '@/data/landing-course';
+import { trackEvent } from '@/lib/analytics';
 
 export function useCheckout() {
   const handleCheckout = useCallback(() => {
     const url = landingCourse.checkoutUrl;
     if (url && url.startsWith('http')) {
+      trackEvent('begin_checkout', {
+        currency: 'INR',
+        value: 499,
+        items: [{
+          item_id: 'canva-ai-video-course',
+          item_name: 'Canva AI Video Editing Course',
+          price: 499,
+          quantity: 1,
+        }],
+      });
       window.open(url, '_blank', 'noopener,noreferrer');
     } else if (url && url.startsWith('/')) {
       window.location.href = url;
@@ -37,9 +48,12 @@ export function CTAButton({
   const checkout = useCheckout();
 
   const handleClick = () => {
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'cta_click', { location });
-    }
+    trackEvent('click_buy', {
+      course_name: 'Canva AI Video Editing',
+      price: 499,
+      currency: 'INR',
+      cta_location: location,
+    });
     if (onClick) {
       onClick();
     } else {

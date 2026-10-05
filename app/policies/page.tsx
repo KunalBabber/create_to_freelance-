@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { landingCourse } from '@/data/landing-course';
+import { AnalyticsConsentSettings } from '@/components/analytics/AnalyticsConsentSettings';
 
 export const metadata: Metadata = {
   title: `Privacy Policy & Terms | ${landingCourse.name}`,
@@ -32,6 +33,13 @@ export default function PoliciesPage() {
           <div className="mt-5 space-y-4 text-sm leading-6 text-slate-700">
             <p><strong className="text-slate-900">Information you send us:</strong> If you email us, we use the information in your message to respond to your request. Please do not email payment card details or passwords.</p>
             <p><strong className="text-slate-900">Third-party services:</strong> Gumroad processes the purchase. Its own privacy policy and terms apply to information submitted during checkout.</p>
+            <p><strong className="text-slate-900">Analytics:</strong> If you allow analytics, we use a random first-party visitor ID, session ID, page events, UTM campaign values, and referring domain to understand aggregate traffic and conversions. Google Analytics 4 loads only after consent. We do not use device fingerprinting or collect email through analytics. The IDs and first-touch attribution remain in your browser until you clear them.</p>
+            <p><strong className="text-slate-900">Free resource requests:</strong> If you submit the resources form, we store the email address you provide and use it to send the requested links. We may store the source, campaign, and page associated with your request. Resend delivers the email; we do not use the address for unrelated marketing.</p>
+            <p><strong className="text-slate-900">Purchase records:</strong> Gumroad sends sale notifications to our server. We verify each sale with Gumroad&apos;s authenticated API before recording its sale ID, product, amount, currency, status, and available attribution. We do not save purchaser email in the purchase record; it is only used to match an existing voluntary lead.</p>
+            <p><strong className="text-slate-900">Storage and control:</strong> Anonymous event and attribution records are stored in our private Supabase database and shown only in the protected admin dashboard. Your analytics choice is saved in a first-party cookie for up to 180 days; you can change it here. To request deletion of a resource-request email, contact us at the address below.</p>
+            <AnalyticsConsentSettings />
+            <p><strong className="text-slate-900">Analytics:</strong> If you choose “Allow analytics,” we use a random first-party visitor/session ID, page events, UTM campaign values, and referrer origin to understand aggregate traffic and conversions. Google Analytics 4 loads only after consent. We do not use device fingerprinting or collect email through analytics. You can decline analytics and still use the site.</p>
+            <p><strong className="text-slate-900">Free resource requests:</strong> If you submit the resources form, we store the email address you provide and use it to send the requested links. We may store the source/campaign and page from which you submitted the form. We do not use that address for unrelated marketing.</p>
             <p><strong className="text-slate-900">Questions:</strong> Contact <a className="text-blue-700 underline underline-offset-2" href={`mailto:${landingCourse.contactEmail}`}>{landingCourse.contactEmail}</a>.</p>
           </div>
         </section>

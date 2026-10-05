@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { Check, ChevronDown, Menu } from 'lucide-react';
 import { landingCourse } from '@/data/landing-course';
 import { CTAButton } from '@/components/shared/CTAButton';
+import { LeadResources } from '@/components/sections/LeadResources';
 
 const included = [
   '6+ Detailed Modules',
@@ -66,7 +67,7 @@ function Hero() {
       <div className="max-w-xl">
         <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold tracking-wide text-blue-800">BEGINNER FRIENDLY COURSE</span>
         <h1 className="mt-5 text-4xl font-bold leading-[1.08] text-slate-950 sm:text-5xl">Learn Creative Skills That Actually Get You Started</h1>
-        <p className="mt-5 max-w-lg text-base leading-7 text-slate-600">A practical Hindi/Hinglish course designed for beginners who want to learn Canva, AI tools, Reels editing, thumbnail design, branding and portfolio creation.</p>
+        <p className="mt-5 max-w-lg text-base leading-7 text-slate-600">A practical Hindi/Hinglish course designed for beginners who want to learn Canva, Reels editing, thumbnail design, branding and portfolio creation.</p>
         <div className="mt-7 flex items-end gap-3">
           <span className="text-4xl font-bold leading-none text-slate-950">{landingCourse.price}</span>
           <span className="pb-0.5 text-sm text-slate-500">One-Time Payment</span>
@@ -78,19 +79,15 @@ function Hero() {
           ))}
         </ul>
       </div>
-      <div className="course-cover" role="img" aria-label="GrowLearnix course cover preview">
-        <div className="cover-window">
-          <div className="cover-toolbar"><span>GROWLEARNIX</span><span className="cover-status" /></div>
-          <div className="cover-poster">
-            <div className="cover-copy">
-              <p>A practical creator course</p>
-              <h2>MAKE<br />REAL<br />THINGS.</h2>
-              <span>Canva · AI · Video</span>
-            </div>
-            <div className="cover-tiles" aria-hidden="true"><i /><i /><i /><i /></div>
-            <span className="cover-caption">LEARN · MAKE · BUILD YOUR PORTFOLIO</span>
-          </div>
-        </div>
+      <div className="hero-banner">
+        <Image
+          src="/images/canva-creator-freelancer.png"
+          alt="Design with Canva: social media posts, video, Reels, carousel designs, and Canva AI"
+          fill
+          sizes="(min-width: 1024px) 55vw, 100vw"
+          priority
+          className="object-contain"
+        />
       </div>
     </section>
   );
@@ -232,5 +229,5 @@ function Footer() {
 }
 
 export function CleanLanding() {
-  return <><Navbar /><main><Hero /><Included /><Projects /><Pricing /><FAQ /><FinalCTA /></main><Footer /></>;
+  return <><Navbar /><main><Hero /><Included /><Projects /><LeadResources /><Pricing /><FAQ /><FinalCTA /></main><Footer /></>;
 }

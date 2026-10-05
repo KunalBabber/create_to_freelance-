@@ -1,6 +1,8 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Manrope } from 'next/font/google';
+import { GoogleAnalytics } from '@next/third-parties/google';
+import { CourseAnalyticsTracker } from '@/components/analytics/CourseAnalyticsTracker';
 
 const manrope = Manrope({ subsets: ['latin'] });
 
@@ -88,6 +90,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+
   return (
     <html lang="en">
       <head>
@@ -101,7 +105,9 @@ export default function RootLayout({
         />
       </head>
       <body className={`${manrope.className} bg-background text-foreground antialiased`}>
+        <CourseAnalyticsTracker />
         {children}
+        {gaMeasurementId ? <GoogleAnalytics gaId={gaMeasurementId} /> : null}
       </body>
     </html>
   );

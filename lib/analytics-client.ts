@@ -1,0 +1,233 @@
+'use client';
+
+export type AnalyticsEventName =
+  | 'page_view'
+  | 'view_course'
+  | 'click_buy'
+  | 'begin_checkout'
+  | 'lead_generated';
+
+export type Attribution = {
+  source: string;
+  utmSource: string | null;
+  medium: string | null;
+  campaign: string | null;
+  content: string | null;
+  referrer: string | null;
+  firstLandingPage: string;
+};
+
+declare global {
+  interface Window {
+    dataLayer?: unknown[][];
+    gtag?: (...args: unknown[]) => void;
+  }
+}
+
+const consentKey = 'growlearnix-analytics-consent';
+const consentUpdatedAtKey = 'growlearnix-analytics-consent-updated-at';
+const consentLifetimeMs = 180 * 24 * 60 * 60 * 1000;
+const visitorKey = 'growlearnix-visitor-id';
+const sessionKey = 'growlearnix-session-id';
+const attributionKey = 'growlearnix-first-touch';
+const gaClientIdKey = 'growlearnix-ga-client-id';
+const gaSessionIdKey = 'growlearnix-ga-session-id';
+
+function newId() {
+  return crypto.randomUUID();
+}
+
+export function hasAnalyticsConsent() {
+  return typeof window !== 'undefined' && getConsentChoice() === 'accepted';
+}
+
+export function getConsentChoice(): 'accepted' | 'rejected' | null {
+  const saved = localStorage.getItem(consentKey);
+  const updatedAt = Number(localStorage.getItem(consentUpdatedAtKey));
+  const age = Date.now() - updatedAt;
+  if ((saved !== 'accepted' && saved !== 'rejected') || !Number.isFinite(updatedAt) || age < 0 || age >= consentLifetimeMs) {
+    localStorage.removeItem(consentKey);
+    localStorage.removeItem(consentUpdatedAtKey);
+    return null;
+  }
+  return saved;
+}
+
+export function getVisitorId() {
+  let id = localStorage.getItem(visitorKey);
+  if (!id) {
+    id = newId();
+    localStorage.setItem(visitorKey, id);
+  }
+  return id;
+}
+
+export function getSessionId() {
+  let id = sessionStorage.getItem(sessionKey);
+  if (!id) {
+    id = newId();
+    sessionStorage.setItem(sessionKey, id);
+  }
+  return id;
+}
+
+function normalizeSource(value: string | null, referrer: string | null) {
+  const input = (value || '').toLowerCase();
+  const host = (referrer || '').toLowerCase();
+  if (input.includes('instagram') || host.includes('instagram.com')) return 'Instagram';
+  if (input.includes('youtube') || host.includes('youtube.com') || host.includes('youtu.be')) return 'YouTube';
+  if (input.includes('google') || host.includes('google.')) return 'Google';
+  if (input.includes('facebook') || host.includes('facebook.com') || host.includes('fb.com')) return 'Facebook';
+  if (input.includes('whatsapp') || host.includes('whatsapp.com') || host.includes('wa.me')) return 'WhatsApp';
+  if (!input && !host) return 'Direct';
+  return input ? 'Other' : 'Other';
+}
+
+function referrerOrigin(value: string) {
+  try {
+    const url = new URL(value);
+    return url.origin.slice(0, 200);
+  } catch {
+    return null;
+  }
+}
+
+export function getFirstTouchAttribution(): Attribution {
+  const saved = localStorage.getItem(attributionKey);
+  if (saved) {
+    try {
+      return JSON.parse(saved) as Attribution;
+    } catch {
+      localStorage.removeItem(attributionKey);
+    }
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const referrer = referrerOrigin(document.referrer);
+  const utmSource = params.get('utm_source')?.slice(0, 100) || null;
+  const attribution: Attribution = {
+    source: normalizeSource(utmSource, referrer),
+    utmSource,
+    medium: params.get('utm_medium')?.slice(0, 100) || null,
+    campaign: params.get('utm_campaign')?.slice(0, 150) || null,
+    content: params.get('utm_content')?.slice(0, 150) || null,
+    referrer,
+    firstLandingPage: window.location.pathname.slice(0, 255) || '/',
+  };
+
+  localStorage.setItem(attributionKey, JSON.stringify(attribution));
+  return attribution;
+}
+
+export function getVoluntaryLeadAttribution(): Attribution {
+  const params = new URLSearchParams(window.location.search);
+  const referrer = referrerOrigin(document.referrer);
+  const utmSource = params.get('utm_source')?.slice(0, 100) || null;
+  const internalReferrer = referrer ? new URL(referrer).host === window.location.host : false;
+
+  return {
+    source: !utmSource && internalReferrer ? 'Direct' : normalizeSource(utmSource, referrer),
+    utmSource,
+    medium: params.get('utm_medium')?.slice(0, 100) || null,
+    campaign: params.get('utm_campaign')?.slice(0, 150) || null,
+    content: params.get('utm_content')?.slice(0, 150) || null,
+    referrer,
+    firstLandingPage: window.location.pathname.slice(0, 255) || '/',
+  };
+}
+
+export function setConsentChoice(choice: 'accepted' | 'rejected') {
+  localStorage.setItem(consentKey, choice);
+  localStorage.setItem(consentUpdatedAtKey, String(Date.now()));
+  if (choice === 'rejected') {
+    localStorage.removeItem(visitorKey);
+    localStorage.removeItem(attributionKey);
+    localStorage.removeItem(gaClientIdKey);
+    localStorage.removeItem(gaSessionIdKey);
+    sessionStorage.removeItem(sessionKey);
+  }
+  window.dispatchEvent(new CustomEvent('growlearnix-analytics-consent-change', { detail: choice }));
+}
+
+export function getStoredGoogleIds() {
+  return {
+    clientId: localStorage.getItem(gaClientIdKey),
+    sessionId: localStorage.getItem(gaSessionIdKey),
+  };
+}
+
+export function rememberGoogleIds(clientId: string, sessionId: string) {
+  localStorage.setItem(gaClientIdKey, clientId);
+  localStorage.setItem(gaSessionIdKey, sessionId);
+}
+
+export function trackAnalyticsEvent(
+  eventName: AnalyticsEventName,
+  details: Record<string, string | number | boolean | undefined> = {},
+  options: { sendToGoogle?: boolean } = {}
+) {
+  if (!hasAnalyticsConsent()) return;
+
+  const attribution = getFirstTouchAttribution();
+  const visitorId = getVisitorId();
+  const sessionId = getSessionId();
+  const pagePath = window.location.pathname.slice(0, 255) || '/';
+
+  if (options.sendToGoogle !== false) trackGoogleAnalyticsEvent(eventName, details);
+
+  if (eventName === 'lead_generated') return;
+
+  void fetch('/api/analytics/events', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      eventName,
+      visitorId,
+      sessionId,
+      pagePath,
+      ...attribution,
+    }),
+    keepalive: true,
+  }).catch(() => undefined);
+}
+
+export function trackGoogleAnalyticsEvent(
+  eventName: AnalyticsEventName,
+  details: Record<string, string | number | boolean | undefined> = {}
+) {
+  if (!hasAnalyticsConsent() || typeof window === 'undefined' || typeof window.gtag !== 'function') return false;
+  window.gtag('event', eventName, {
+    page_location: `${window.location.origin}${window.location.pathname}`,
+    page_title: document.title,
+    ...details,
+  });
+  return true;
+}
+
+export function buildCheckoutUrl(checkoutUrl: string) {
+  const url = new URL(checkoutUrl);
+  if (!hasAnalyticsConsent()) return url.toString();
+
+  const attribution = getFirstTouchAttribution();
+  const visitorId = getVisitorId();
+  const sessionId = getSessionId();
+  const googleIds = getStoredGoogleIds();
+
+  for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'] as const) {
+    const value = key === 'utm_source'
+      ? attribution.utmSource || (attribution.source === 'Direct' ? null : attribution.source)
+      : attribution[key.slice(4) as 'medium' | 'campaign' | 'content'];
+    if (value) url.searchParams.set(key, value);
+  }
+
+  url.searchParams.set('growlearnix_visitor_id', visitorId);
+  url.searchParams.set('growlearnix_session_id', sessionId);
+  url.searchParams.set('growlearnix_source', attribution.source);
+  url.searchParams.set('growlearnix_first_landing_page', attribution.firstLandingPage);
+  url.searchParams.set('growlearnix_analytics_consent', 'granted');
+  if (googleIds.clientId) url.searchParams.set('growlearnix_ga_client_id', googleIds.clientId);
+  if (googleIds.sessionId) url.searchParams.set('growlearnix_ga_session_id', googleIds.sessionId);
+
+  return url.toString();
+}
