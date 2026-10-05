@@ -1,0 +1,173 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 250 16% 5%;
+    --foreground: 210 20% 98%;
+    --card: 250 14% 7%;
+    --card-foreground: 210 20% 98%;
+    --popover: 250 14% 8%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 263 85% 62%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 250 10% 14%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 250 10% 14%;
+    --muted-foreground: 250 10% 65%;
+    --accent: 263 85% 62%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 56%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 250 12% 16%;
+    --input: 250 12% 18%;
+    --ring: 263 85% 62%;
+    --radius: 0.75rem;
+
+    --glow-purple: 263 85% 62%;
+    --glow-blue: 217 91% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "cv01";
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(263 85% 68%), hsl(217 91% 65%), hsl(280 80% 65%));
+  }
+
+  .text-gradient-animated {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(263 85% 68%), hsl(217 91% 65%), hsl(280 80% 65%), hsl(263 85% 68%));
+    background-size: 300% 100%;
+    animation: gradient-shift 5s ease infinite;
+  }
+
+  .glass {
+    background: hsl(250 14% 10% / 0.55);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid hsl(250 12% 18% / 0.6);
+  }
+
+  .glass-card {
+    background: hsl(250 14% 9% / 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(250 12% 16% / 0.7);
+  }
+
+  .glow-purple {
+    box-shadow: 0 0 40px -8px hsl(263 85% 62% / 0.45);
+  }
+
+  .glow-blue {
+    box-shadow: 0 0 40px -8px hsl(217 91% 60% / 0.4);
+  }
+
+  .glow-text {
+    text-shadow: 0 0 30px hsl(263 85% 62% / 0.5);
+  }
+
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, hsl(250 12% 14% / 0.4) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(250 12% 14% / 0.4) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .bg-dots {
+    background-image: radial-gradient(hsl(250 12% 22%) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(1deg); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 4s ease-in-out infinite;
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(250 16% 5%);
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(250 12% 20%);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(263 85% 40%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-float, .animate-float-slow, .animate-pulse-glow, .animate-marquee {
+    animation: none !important;
+  }
+}
