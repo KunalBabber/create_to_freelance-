@@ -1,4 +1,5 @@
-import { Check, ChevronDown, Menu, Play } from 'lucide-react';
+import Image from 'next/image';
+import { Check, ChevronDown, Menu } from 'lucide-react';
 import { landingCourse } from '@/data/landing-course';
 import { CTAButton } from '@/components/shared/CTAButton';
 
@@ -64,7 +65,7 @@ function Hero() {
     <section id="top" className="site-container grid items-center gap-10 py-12 sm:py-16 lg:grid-cols-2 lg:gap-16 lg:py-20">
       <div className="max-w-xl">
         <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold tracking-wide text-blue-800">BEGINNER FRIENDLY COURSE</span>
-        <h1 className="mt-5 text-4xl font-bold leading-[1.08] text-slate-950 sm:text-5xl">Learn Canva, AI &amp; Video Editing and Build Real Projects</h1>
+        <h1 className="mt-5 text-4xl font-bold leading-[1.08] text-slate-950 sm:text-5xl">Learn Creative Skills That Actually Get You Started</h1>
         <p className="mt-5 max-w-lg text-base leading-7 text-slate-600">A practical Hindi/Hinglish course designed for beginners who want to learn Canva, AI tools, Reels editing, thumbnail design, branding and portfolio creation.</p>
         <div className="mt-7 flex items-end gap-3">
           <span className="text-4xl font-bold leading-none text-slate-950">{landingCourse.price}</span>
@@ -77,9 +78,9 @@ function Hero() {
           ))}
         </ul>
       </div>
-      <div className="course-cover" role="img" aria-label="Creator to Freelancer course cover preview">
+      <div className="course-cover" role="img" aria-label="GrowLearnix course cover preview">
         <div className="cover-window">
-          <div className="cover-toolbar"><span>CREATOR TO FREELANCER</span><span className="cover-status" /></div>
+          <div className="cover-toolbar"><span>GROWLEARNIX</span><span className="cover-status" /></div>
           <div className="cover-poster">
             <div className="cover-copy">
               <p>A practical creator course</p>
@@ -113,19 +114,23 @@ function Included() {
   );
 }
 
-function ProjectVisual({ kind }: { kind: 'design' | 'video' | 'branding' }) {
-  if (kind === 'video') {
-    return <div className="timeline-board" aria-hidden="true"><div className="timeline-frame"><Play className="h-7 w-7 fill-current" /></div><div className="timeline-track"><i /><i /><i /></div></div>;
-  }
-  if (kind === 'branding') return <div className="brand-board" aria-hidden="true"><i /><i /><i /><i /></div>;
-  return <div className="design-board" aria-hidden="true"><p>Create with clarity</p><span /></div>;
-}
-
 function Projects() {
   const projects = [
-    { title: 'Canva Design', kind: 'design' as const },
-    { title: 'Reels & Video Editing', kind: 'video' as const },
-    { title: 'Branding & Portfolio', kind: 'branding' as const },
+    {
+      title: 'Canva Design',
+      image: '/images/canva-design.jpg',
+      alt: 'Desktop screen showing a graphic design editor',
+    },
+    {
+      title: 'Reels & Video Editing',
+      image: '/images/video-editing.jpg',
+      alt: 'Video editor timeline with a multi-track project open on screen',
+    },
+    {
+      title: 'Branding & Portfolio',
+      image: '/images/branding-portfolio.jpg',
+      alt: 'Laptop and phone displaying a portfolio design presentation',
+    },
   ];
 
   return (
@@ -138,7 +143,16 @@ function Projects() {
         <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => (
             <article key={project.title} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-              <div className="preview-stage"><ProjectVisual kind={project.kind} /></div>
+              <div className="preview-stage">
+                <Image
+                  src={project.image}
+                  alt={project.alt}
+                  fill
+                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                  className="object-cover"
+                  unoptimized
+                />
+              </div>
               <h3 className="px-4 py-4 text-sm font-semibold text-slate-900">{project.title}</h3>
             </article>
           ))}
@@ -207,8 +221,8 @@ function Footer() {
       <div className="site-container flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
         <span className="text-sm font-semibold text-slate-900">{landingCourse.name}</span>
         <nav aria-label="Footer links" className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-slate-600">
-          <a href="#privacy" className="hover:text-slate-950">Privacy Policy</a>
-          <a href="#terms" className="hover:text-slate-950">Terms</a>
+          <a href="/policies#privacy" className="hover:text-slate-950">Privacy Policy</a>
+          <a href="/policies#terms" className="hover:text-slate-950">Terms</a>
           <a href={`mailto:${landingCourse.contactEmail}`} className="hover:text-slate-950">Contact</a>
         </nav>
         <p className="text-xs text-slate-500">&copy; {landingCourse.currentYear} {landingCourse.name}</p>

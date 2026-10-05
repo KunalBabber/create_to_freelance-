@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'
   ),
-  title: 'Creator to Freelancer | Canva, AI & Video Editing Course',
+  title: 'GrowLearnix | Canva, AI & Video Editing Course',
   description:
     'A beginner-friendly Hindi and Hinglish course to learn Canva, AI tools, Reels editing, branding and practical portfolio projects. One-time payment ₹499.',
   keywords: [
@@ -22,15 +22,15 @@ export const metadata: Metadata = {
     '₹499 course',
   ],
   openGraph: {
-    title: 'Creator to Freelancer | Canva, AI & Video Editing Course',
+    title: 'GrowLearnix | Canva, AI & Video Editing Course',
     description:
       'Learn Canva, AI tools, Reels editing, branding and practical portfolio projects in Hindi and Hinglish for ₹499.',
     type: 'website',
-    siteName: 'Creator to Freelancer',
+    siteName: 'GrowLearnix',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Creator to Freelancer | Canva, AI & Video Editing Course',
+    title: 'GrowLearnix | Canva, AI & Video Editing Course',
     description:
       'A practical Hindi and Hinglish course for beginners. Learn Canva, AI, video editing and build real projects for ₹499.',
   },
@@ -46,12 +46,12 @@ export const metadata: Metadata = {
 const courseStructuredData = {
   '@context': 'https://schema.org',
   '@type': 'Course',
-  name: 'Creator to Freelancer',
+  name: 'GrowLearnix',
   description:
     'A beginner-friendly Hindi and Hinglish course to learn Canva, AI tools, Reels editing and practical creative projects.',
   provider: {
     '@type': 'Organization',
-    name: 'Creator to Freelancer',
+    name: 'GrowLearnix',
   },
   offers: { '@type': 'Offer', price: '499', priceCurrency: 'INR' },
 };
