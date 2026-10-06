@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Manrope } from 'next/font/google';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { CourseAnalyticsTracker } from '@/components/analytics/CourseAnalyticsTracker';
+import { AnalyticsRuntime } from '@/components/analytics/AnalyticsRuntime';
 
 const manrope = Manrope({ subsets: ['latin'] });
 
@@ -106,6 +107,7 @@ export default function RootLayout({
       </head>
       <body className={`${manrope.className} bg-background text-foreground antialiased`}>
         <CourseAnalyticsTracker />
+        <AnalyticsRuntime />
         {children}
         {gaMeasurementId ? <GoogleAnalytics gaId={gaMeasurementId} /> : null}
       </body>
