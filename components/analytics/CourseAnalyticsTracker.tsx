@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { trackViewCourse } from '@/lib/analytics';
+import { trackAnalyticsEvent } from '@/lib/analytics-client';
 
 export function CourseAnalyticsTracker() {
   const pathname = usePathname();
@@ -12,7 +12,8 @@ export function CourseAnalyticsTracker() {
     if (typeof window === 'undefined') return;
 
     if (pathname === '/' && trackedPathRef.current !== pathname) {
-      trackViewCourse();
+      trackAnalyticsEvent('page_view', {}, { sendToGoogle: false });
+      trackAnalyticsEvent('view_course', {}, { sendToGoogle: false });
       trackedPathRef.current = pathname;
       return;
     }

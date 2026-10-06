@@ -28,10 +28,14 @@ function isSameOrigin(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (request.cookies.get('growlearnix_analytics_consent')?.value !== 'granted') {
+  const host = request.headers.get('host') || '';
+  const consent = request.cookies.get('growlearnix_analytics_consent')?.value;
+  const isLocalhost = host.startsWith('localhost') || host.startsWith('127.0.0.1') || host.startsWith('0.0.0.0');
+
+  if (!isLocalhost && consent !== 'granted') {
     return NextResponse.json({ error: 'Analytics consent is required.' }, { status: 403 });
   }
-  if (!isSameOrigin(request)) return NextResponse.json({ error: 'Invalid origin.' }, { status: 403 });
+  if (!isLocalhost && !isSameOrigin(request)) return NextResponse.json({ error: 'Invalid origin.' }, { status: 403 });
 
   let json: unknown;
   try {

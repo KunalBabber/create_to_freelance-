@@ -37,17 +37,45 @@ function newId() {
   return crypto.randomUUID();
 }
 
+function setConsentCookie(value: 'accepted' | 'rejected') {
+  if (typeof document === 'undefined') return;
+  const secure = location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `growlearnix_analytics_consent=${value === 'accepted' ? 'granted' : 'denied'}; path=/; max-age=${180 * 24 * 60 * 60}${secure}; SameSite=Lax`;
+}
+
+function isLocalDevelopment() {
+  return typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname);
+}
+
 export function hasAnalyticsConsent() {
-  return typeof window !== 'undefined' && getConsentChoice() === 'accepted';
+  if (typeof window === 'undefined') return false;
+  if (isLocalDevelopment()) {
+    return getConsentChoice() !== 'rejected';
+  }
+  return getConsentChoice() === 'accepted';
 }
 
 export function getConsentChoice(): 'accepted' | 'rejected' | null {
   const saved = localStorage.getItem(consentKey);
   const updatedAt = Number(localStorage.getItem(consentUpdatedAtKey));
   const age = Date.now() - updatedAt;
+
+  if (isLocalDevelopment() && !saved) {
+    localStorage.setItem(consentKey, 'accepted');
+    localStorage.setItem(consentUpdatedAtKey, String(Date.now()));
+    setConsentCookie('accepted');
+    return 'accepted';
+  }
+
   if ((saved !== 'accepted' && saved !== 'rejected') || !Number.isFinite(updatedAt) || age < 0 || age >= consentLifetimeMs) {
     localStorage.removeItem(consentKey);
     localStorage.removeItem(consentUpdatedAtKey);
+    if (isLocalDevelopment()) {
+      localStorage.setItem(consentKey, 'accepted');
+      localStorage.setItem(consentUpdatedAtKey, String(Date.now()));
+      setConsentCookie('accepted');
+      return 'accepted';
+    }
     return null;
   }
   return saved;
@@ -139,6 +167,7 @@ export function getVoluntaryLeadAttribution(): Attribution {
 export function setConsentChoice(choice: 'accepted' | 'rejected') {
   localStorage.setItem(consentKey, choice);
   localStorage.setItem(consentUpdatedAtKey, String(Date.now()));
+  setConsentCookie(choice);
   if (choice === 'rejected') {
     localStorage.removeItem(visitorKey);
     localStorage.removeItem(attributionKey);
