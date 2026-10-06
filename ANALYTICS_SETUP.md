@@ -5,8 +5,18 @@ The landing page keeps its existing Gumroad checkout. First-party storage and th
 ## 1. Supabase
 
 1. Create a Supabase project.
-2. Run [`supabase/schema.sql`](supabase/schema.sql) in the Supabase SQL Editor. It is safe to rerun to add the attribution/cooldown columns.
+2. Run [`supabase/schema.sql`](supabase/schema.sql) in the Supabase SQL Editor. It is safe to rerun to add the attribution, visitor-duration, and cooldown columns.
 3. Set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` and in the production host's server environment. Use a Supabase service-role/secret key (legacy `service_role` or current `sb_secret_` format), never a publishable/anon key. Keep it server-only; never use a `NEXT_PUBLIC_` variable.
+
+If analytics event inserts report that `duration_seconds` is missing or that `time_on_site` violates the event-name constraint, run this in the Supabase SQL Editor to migrate the deployed table and refresh the PostgREST schema cache:
+
+```sql
+alter table public.analytics_events add column if not exists duration_seconds integer;
+alter table public.analytics_events drop constraint if exists analytics_events_event_name_check;
+alter table public.analytics_events add constraint analytics_events_event_name_check
+  check (event_name in ('page_view', 'view_course', 'click_buy', 'begin_checkout', 'time_on_site', 'lead_generated', 'purchase'));
+notify pgrst, 'reload schema';
+```
 
 All analytics, lead, purchase, and webhook tables have RLS enabled and no public policies. The server uses the service role; browser clients only call same-origin API routes.
 
@@ -47,4 +57,4 @@ npm run typecheck
 npm run build
 ```
 
-Use a URL such as `/?utm_source=instagram&utm_medium=reel&utm_campaign=canva_course` to verify first-touch attribution. Dashboard visitor counts include only visitors who opt into analytics; “today” uses UTC. Revenue is shown grouped by the currency returned by Gumroad; the app does not add unlike currencies together.
+Use a URL such as `/?utm_source=instagram&utm_medium=reel&utm_campaign=canva_course` to verify first-touch attribution. Dashboard visitor counts and time-on-site data include only visitors who opt into analytics. Time is measured while the page is visible and shown per anonymous visitor ID.

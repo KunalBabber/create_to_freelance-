@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 const eventSchema = z.object({
-  eventName: z.enum(['page_view', 'view_course', 'click_buy', 'begin_checkout']),
+  eventName: z.enum(['page_view', 'view_course', 'click_buy', 'begin_checkout', 'time_on_site']),
+  durationSeconds: z.number().int().min(1).max(86400).optional(),
   visitorId: z.string().uuid(),
   sessionId: z.string().uuid(),
   pagePath: z.string().min(1).max(255),
@@ -48,23 +49,42 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: 'Invalid analytics event.' }, { status: 400 });
 
   const event = parsed.data;
-  try {
-    const { error } = await getSupabaseAdmin().from('analytics_events').insert({
-      event_name: event.eventName,
-      visitor_id: event.visitorId,
-      session_id: event.sessionId,
-      page_path: event.pagePath,
-      source: allowedSources.has(event.source) ? event.source : 'Other',
-      utm_source: event.utmSource,
-      medium: event.medium,
-      campaign: event.campaign,
-      content: event.content,
-      referrer: event.referrer,
-    });
+  const analyticsEvent = {
+    event_name: event.eventName,
+    ...(event.durationSeconds !== undefined ? { duration_seconds: event.durationSeconds } : {}),
+    visitor_id: event.visitorId,
+    session_id: event.sessionId,
+    page_path: event.pagePath,
+    source: allowedSources.has(event.source) ? event.source : 'Other',
+    utm_source: event.utmSource,
+    medium: event.medium,
+    campaign: event.campaign,
+    content: event.content,
+    referrer: event.referrer,
+  };
 
+  try {
+    const { error } = await getSupabaseAdmin().from('analytics_events').insert(analyticsEvent);
     if (error) throw error;
     return new NextResponse(null, { status: 204 });
-  } catch {
+  } catch (error) {
+    const isMissingDurationColumn =
+      event.eventName === 'time_on_site' &&
+      event.durationSeconds !== undefined &&
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'PGRST204';
+
+    if (isMissingDurationColumn) {
+      console.warn(
+        'Analytics duration column is unavailable; skipping time_on_site event.',
+        error
+      );
+      return new NextResponse(null, { status: 204 });
+    }
+
+    console.error('Analytics event insert failed:', error);
     return NextResponse.json({ error: 'Analytics storage is unavailable.' }, { status: 503 });
   }
 }
