@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { trackAnalyticsEvent } from '@/lib/analytics-client';
+import { hasAnalyticsConsent, trackAnalyticsEvent } from '@/lib/analytics-client';
 
 export function CourseAnalyticsTracker() {
   const pathname = usePathname();
@@ -10,17 +10,49 @@ export function CourseAnalyticsTracker() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
-    if (pathname === '/' && trackedPathRef.current !== pathname) {
-      trackAnalyticsEvent('page_view', {}, { sendToGoogle: false });
-      trackAnalyticsEvent('view_course', {}, { sendToGoogle: false });
-      trackedPathRef.current = pathname;
+    if (pathname.startsWith('/admin')) {
+      trackedPathRef.current = null;
       return;
     }
 
-    if (pathname !== '/') {
-      trackedPathRef.current = null;
-    }
+    let pageStartedAt = Date.now();
+    const reportTime = () => {
+      const durationSeconds = Math.floor((Date.now() - pageStartedAt) / 1000);
+      pageStartedAt = Date.now();
+      if (durationSeconds > 0) {
+        trackAnalyticsEvent('time_on_site', { durationSeconds }, { sendToGoogle: false });
+      }
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') reportTime();
+      else pageStartedAt = Date.now();
+    };
+    const trackCurrentPage = () => {
+      if (!hasAnalyticsConsent() || trackedPathRef.current === pathname) return;
+      trackAnalyticsEvent('page_view', {}, { sendToGoogle: false });
+      if (pathname === '/') trackAnalyticsEvent('view_course', {}, { sendToGoogle: false });
+      trackedPathRef.current = pathname;
+    };
+    const handleConsentChange = () => {
+      if (hasAnalyticsConsent()) {
+        pageStartedAt = Date.now();
+        trackCurrentPage();
+      } else {
+        trackedPathRef.current = null;
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', reportTime);
+    window.addEventListener('growlearnix-analytics-consent-change', handleConsentChange);
+    trackCurrentPage();
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', reportTime);
+      window.removeEventListener('growlearnix-analytics-consent-change', handleConsentChange);
+      reportTime();
+    };
   }, [pathname]);
 
   return null;

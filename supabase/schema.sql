@@ -1,6 +1,7 @@
 create table if not exists public.analytics_events (
   id uuid primary key default gen_random_uuid(),
-  event_name text not null check (event_name in ('page_view', 'view_course', 'click_buy', 'begin_checkout', 'lead_generated', 'purchase')),
+  event_name text not null check (event_name in ('page_view', 'view_course', 'click_buy', 'begin_checkout', 'time_on_site', 'lead_generated', 'purchase')),
+  duration_seconds integer check (duration_seconds between 1 and 86400),
   visitor_id uuid,
   session_id uuid,
   page_path text not null default '/',
@@ -72,6 +73,13 @@ create table if not exists public.gumroad_webhook_deliveries (
 );
 
 alter table public.analytics_events add column if not exists utm_source text;
+alter table public.analytics_events add column if not exists duration_seconds integer;
+alter table public.analytics_events drop constraint if exists analytics_events_duration_seconds_check;
+alter table public.analytics_events add constraint analytics_events_duration_seconds_check
+  check (duration_seconds between 1 and 86400);
+alter table public.analytics_events drop constraint if exists analytics_events_event_name_check;
+alter table public.analytics_events add constraint analytics_events_event_name_check
+  check (event_name in ('page_view', 'view_course', 'click_buy', 'begin_checkout', 'time_on_site', 'lead_generated', 'purchase'));
 alter table public.leads add column if not exists utm_source text;
 alter table public.leads add column if not exists last_resource_email_sent_at timestamptz;
 alter table public.purchases add column if not exists utm_source text;
@@ -96,86 +104,36 @@ with event_metrics as (
   select
     count(distinct session_id) filter (where event_name = 'page_view') as total_visitors,
     count(distinct visitor_id) filter (where event_name = 'page_view') as unique_visitors,
-    count(distinct session_id) filter (
-      where event_name = 'page_view'
-        and created_at >= ((now() at time zone 'UTC')::date::timestamp at time zone 'UTC')
-    ) as today_visitors,
-    count(*) filter (where event_name = 'page_view') as page_views,
-    count(*) filter (where event_name = 'click_buy') as buy_clicks,
-    count(*) filter (where event_name = 'begin_checkout') as checkouts
+    count(*) filter (where event_name = 'click_buy') as buy_clicks
   from public.analytics_events
-), lead_metrics as (
-  select count(*) as leads from public.leads
-), purchase_metrics as (
-  select
-    (select count(*) from public.purchases where status = 'paid') as purchases,
-    coalesce((select jsonb_object_agg(currency, revenue) from (
-      select currency, sum(amount_cents)::numeric / 100 as revenue
-      from public.purchases where status = 'paid' group by currency
-    ) revenue_by_currency), '{}'::jsonb) as revenue_by_currency
 ), event_source_metrics as (
   select source, count(distinct visitor_id) as visitors
   from public.analytics_events
   where event_name = 'page_view'
   group by source
-), lead_source_metrics as (
-  select source, count(*) as leads
-  from public.leads
-  group by source
-), purchase_source_metrics as (
-  select source, currency, count(*) as purchases, sum(amount_cents)::numeric / 100 as revenue
-  from public.purchases
-  where status = 'paid'
-  group by source, currency
-), source_names as (
-  select unnest(array['Instagram', 'YouTube', 'Google', 'Facebook', 'WhatsApp', 'Direct', 'Other']) as source
-  union select source from event_source_metrics
-  union select source from lead_source_metrics
-  union select source from purchase_source_metrics
-), source_rows as (
+), visitor_time_rows as (
+  select visitor_id, max(source) as source, sum(duration_seconds)::integer as seconds, max(created_at) as last_seen
+  from public.analytics_events
+  where event_name = 'time_on_site' and visitor_id is not null and duration_seconds is not null
+  group by visitor_id
+), visitor_time_metrics as (
   select
-    source_names.source,
-    coalesce(event_source_metrics.visitors, 0) as visitors,
-    coalesce(lead_source_metrics.leads, 0) as leads,
-    coalesce(sum(purchase_source_metrics.purchases), 0) as purchases,
-    coalesce(jsonb_object_agg(purchase_source_metrics.currency, purchase_source_metrics.revenue)
-      filter (where purchase_source_metrics.currency is not null), '{}'::jsonb) as revenue_by_currency
-  from source_names
-  left join event_source_metrics using (source)
-  left join lead_source_metrics using (source)
-  left join purchase_source_metrics using (source)
-  group by source_names.source, event_source_metrics.visitors, lead_source_metrics.leads
-), funnel as (
-  select
-    event_metrics.total_visitors as visitors,
-    lead_metrics.leads,
-    (select count(distinct visitor_id) from public.analytics_events where event_name = 'click_buy') as buy_clicks,
-    (select count(distinct visitor_id) from public.analytics_events where event_name = 'begin_checkout') as checkouts,
-    purchase_metrics.purchases
-  from event_metrics, lead_metrics, purchase_metrics
+    coalesce(round(avg(seconds)), 0)::integer as average_time_seconds,
+    coalesce((
+      select jsonb_agg(to_jsonb(visitor_rows) order by visitor_rows.seconds desc)
+      from (select visitor_id, source, seconds, last_seen from visitor_time_rows order by seconds desc limit 100) visitor_rows
+    ), '[]'::jsonb) as visitor_times
+  from visitor_time_rows
 )
 select jsonb_build_object(
   'totalVisitors', event_metrics.total_visitors,
-  'todayVisitors', event_metrics.today_visitors,
   'uniqueVisitors', event_metrics.unique_visitors,
-  'pageViews', event_metrics.page_views,
-  'leads', lead_metrics.leads,
   'buyClicks', event_metrics.buy_clicks,
-  'checkouts', event_metrics.checkouts,
-  'purchases', purchase_metrics.purchases,
-  'revenueByCurrency', purchase_metrics.revenue_by_currency,
-  'conversionRate', case when event_metrics.unique_visitors = 0 then 0
-    else round(purchase_metrics.purchases::numeric * 100 / event_metrics.unique_visitors, 2) end,
-  'funnel', jsonb_build_array(
-    jsonb_build_object('stage', 'Visitors', 'count', funnel.visitors, 'conversion', 100),
-    jsonb_build_object('stage', 'Leads', 'count', funnel.leads, 'conversion', case when funnel.visitors = 0 then 0 else round(funnel.leads::numeric * 100 / funnel.visitors, 2) end),
-    jsonb_build_object('stage', 'Buy clicks', 'count', funnel.buy_clicks, 'conversion', case when funnel.leads = 0 then 0 else round(funnel.buy_clicks::numeric * 100 / funnel.leads, 2) end),
-    jsonb_build_object('stage', 'Checkout', 'count', funnel.checkouts, 'conversion', case when funnel.buy_clicks = 0 then 0 else round(funnel.checkouts::numeric * 100 / funnel.buy_clicks, 2) end),
-    jsonb_build_object('stage', 'Purchases', 'count', funnel.purchases, 'conversion', case when funnel.checkouts = 0 then 0 else round(funnel.purchases::numeric * 100 / funnel.checkouts, 2) end)
-  ),
-  'sources', coalesce((select jsonb_agg(to_jsonb(source_rows) order by source_rows.visitors desc) from source_rows), '[]'::jsonb)
+  'averageTimeSeconds', visitor_time_metrics.average_time_seconds,
+  'visitorTimes', visitor_time_metrics.visitor_times,
+  'sources', coalesce((select jsonb_agg(to_jsonb(event_source_metrics) order by event_source_metrics.visitors desc) from event_source_metrics), '[]'::jsonb)
 )
-from event_metrics, lead_metrics, purchase_metrics, funnel;
+from event_metrics, visitor_time_metrics;
 $$;
 
 revoke all on function public.get_admin_analytics() from public, anon, authenticated;

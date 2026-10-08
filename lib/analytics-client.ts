@@ -5,6 +5,7 @@ export type AnalyticsEventName =
   | 'view_course'
   | 'click_buy'
   | 'begin_checkout'
+  | 'time_on_site'
   | 'lead_generated';
 
 export type Attribution = {
@@ -56,6 +57,8 @@ export function hasAnalyticsConsent() {
 }
 
 export function getConsentChoice(): 'accepted' | 'rejected' | null {
+  if (typeof window === 'undefined') return null;
+
   const saved = localStorage.getItem(consentKey);
   const updatedAt = Number(localStorage.getItem(consentUpdatedAtKey));
   const age = Date.now() - updatedAt;
@@ -70,13 +73,10 @@ export function getConsentChoice(): 'accepted' | 'rejected' | null {
   if ((saved !== 'accepted' && saved !== 'rejected') || !Number.isFinite(updatedAt) || age < 0 || age >= consentLifetimeMs) {
     localStorage.removeItem(consentKey);
     localStorage.removeItem(consentUpdatedAtKey);
-    if (isLocalDevelopment()) {
-      localStorage.setItem(consentKey, 'accepted');
-      localStorage.setItem(consentUpdatedAtKey, String(Date.now()));
-      setConsentCookie('accepted');
-      return 'accepted';
-    }
-    return null;
+    localStorage.setItem(consentKey, 'accepted');
+    localStorage.setItem(consentUpdatedAtKey, String(Date.now()));
+    setConsentCookie('accepted');
+    return 'accepted';
   }
   return saved;
 }
@@ -215,6 +215,7 @@ export function trackAnalyticsEvent(
       visitorId,
       sessionId,
       pagePath,
+      ...(eventName === 'time_on_site' ? { durationSeconds: details.durationSeconds } : {}),
       ...attribution,
     }),
     keepalive: true,
