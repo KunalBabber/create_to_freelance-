@@ -3,46 +3,55 @@ import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 export const dynamic = 'force-dynamic';
 
-type AnalyticsResponse = {
-  averageTimeSeconds?: number;
-  visitorTimes?: Array<{
-    visitor_id: string;
-    source: string;
-    seconds: number;
-    last_seen: string;
-  }>;
+type AnalyticsEvent = {
+  event_name: string;
+  visitor_id: string | null;
+  session_id: string | null;
+  duration_seconds: number | null;
+  source: string | null;
+  created_at: string;
 };
 
 export async function GET() {
   try {
     const supabase = getSupabaseAdmin();
-    const { data, error } = await supabase.rpc('get_admin_analytics');
-    if (error) throw error;
-
-    const response = data as AnalyticsResponse;
-    const { data: timeRows, error: timeError } = await supabase
+    const { data: eventRows, error: eventsError } = await supabase
       .from('analytics_events')
-      .select('visitor_id, duration_seconds, source, created_at')
-      .eq('event_name', 'time_on_site')
-      .not('visitor_id', 'is', 'null')
-      .not('duration_seconds', 'is', 'null')
+      .select('event_name, visitor_id, session_id, duration_seconds, source, created_at')
       .order('created_at', { ascending: false })
-      .limit(1000);
+      .limit(10000);
 
-    if (timeError) throw timeError;
+    if (eventsError) throw eventsError;
+
+    const events = (eventRows ?? []) as AnalyticsEvent[];
+    const pageViewEvents = events.filter((event) => event.event_name === 'page_view');
+    const buyClickEvents = events.filter((event) => event.event_name === 'click_buy');
+    const timeOnSiteEvents = events.filter((event) => event.event_name === 'time_on_site');
+
+    const totalVisitors = new Set(pageViewEvents.map((event) => event.session_id).filter(Boolean)).size;
+    const uniqueVisitors = new Set(pageViewEvents.map((event) => event.visitor_id).filter(Boolean)).size;
+    const sourceVisitors = new Map<string, Set<string>>();
+    for (const event of pageViewEvents) {
+      if (!event.visitor_id) continue;
+      const source = String(event.source ?? 'Other');
+      const visitors = sourceVisitors.get(source) ?? new Set<string>();
+      visitors.add(event.visitor_id);
+      sourceVisitors.set(source, visitors);
+    }
 
     const visitorTimes = new Map<string, { source: string; seconds: number; last_seen: string }>();
-    for (const row of timeRows ?? []) {
-      const visitorId = row.visitor_id as string;
-      const durationSeconds = Number(row.duration_seconds);
+    for (const event of timeOnSiteEvents) {
+      if (!event.visitor_id || event.duration_seconds === null) continue;
+      const visitorId = event.visitor_id;
+      const durationSeconds = Number(event.duration_seconds);
       const current = visitorTimes.get(visitorId);
       const nextSeconds = (current?.seconds ?? 0) + durationSeconds;
 
-      if (!current || row.created_at > current.last_seen) {
+      if (!current || event.created_at > current.last_seen) {
         visitorTimes.set(visitorId, {
-          source: String(row.source ?? 'Other'),
+          source: String(event.source ?? 'Other'),
           seconds: nextSeconds,
-          last_seen: String(row.created_at),
+          last_seen: event.created_at,
         });
       } else {
         current.seconds = nextSeconds;
@@ -59,9 +68,14 @@ export async function GET() {
 
     return NextResponse.json(
       {
-        ...response,
+        totalVisitors,
+        uniqueVisitors,
+        buyClicks: buyClickEvents.length,
         averageTimeSeconds,
         visitorTimes: visitorTimeList,
+        sources: Array.from(sourceVisitors.entries())
+          .map(([source, visitors]) => ({ source, visitors: visitors.size }))
+          .sort((left, right) => right.visitors - left.visitors),
       },
       { headers: { 'Cache-Control': 'private, no-store, max-age=0' } }
     );
