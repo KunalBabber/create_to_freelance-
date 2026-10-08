@@ -57,7 +57,7 @@ export function hasAnalyticsConsent() {
 }
 
 export function getConsentChoice(): 'accepted' | 'rejected' | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') return null;
 
   const saved = localStorage.getItem(consentKey);
   const updatedAt = Number(localStorage.getItem(consentUpdatedAtKey));
@@ -82,6 +82,8 @@ export function getConsentChoice(): 'accepted' | 'rejected' | null {
 }
 
 export function getVisitorId() {
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') return newId();
+
   let id = localStorage.getItem(visitorKey);
   if (!id) {
     id = newId();
@@ -91,6 +93,8 @@ export function getVisitorId() {
 }
 
 export function getSessionId() {
+  if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') return newId();
+
   let id = sessionStorage.getItem(sessionKey);
   if (!id) {
     id = newId();
@@ -121,6 +125,18 @@ function referrerOrigin(value: string) {
 }
 
 export function getFirstTouchAttribution(): Attribution {
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+    return {
+      source: 'Direct',
+      utmSource: null,
+      medium: null,
+      campaign: null,
+      content: null,
+      referrer: null,
+      firstLandingPage: '/',
+    };
+  }
+
   const saved = localStorage.getItem(attributionKey);
   if (saved) {
     try {
@@ -165,6 +181,8 @@ export function getVoluntaryLeadAttribution(): Attribution {
 }
 
 export function setConsentChoice(choice: 'accepted' | 'rejected') {
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+
   localStorage.setItem(consentKey, choice);
   localStorage.setItem(consentUpdatedAtKey, String(Date.now()));
   setConsentCookie(choice);
@@ -173,12 +191,16 @@ export function setConsentChoice(choice: 'accepted' | 'rejected') {
     localStorage.removeItem(attributionKey);
     localStorage.removeItem(gaClientIdKey);
     localStorage.removeItem(gaSessionIdKey);
-    sessionStorage.removeItem(sessionKey);
+    if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem(sessionKey);
   }
   window.dispatchEvent(new CustomEvent('growlearnix-analytics-consent-change', { detail: choice }));
 }
 
 export function getStoredGoogleIds() {
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+    return { clientId: null, sessionId: null };
+  }
+
   return {
     clientId: localStorage.getItem(gaClientIdKey),
     sessionId: localStorage.getItem(gaSessionIdKey),
@@ -186,6 +208,8 @@ export function getStoredGoogleIds() {
 }
 
 export function rememberGoogleIds(clientId: string, sessionId: string) {
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+
   localStorage.setItem(gaClientIdKey, clientId);
   localStorage.setItem(gaSessionIdKey, sessionId);
 }

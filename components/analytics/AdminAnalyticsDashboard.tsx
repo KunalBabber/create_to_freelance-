@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import { RefreshCw, Trash2 } from 'lucide-react';
 
 type TrafficSource = { source: string; visitors: number };
@@ -79,13 +80,34 @@ export function AdminAnalyticsDashboard() {
   }
 
   useEffect(() => {
-    fetch('/api/admin/analytics', { cache: 'no-store', credentials: 'same-origin' })
-      .then(async (response) => {
-        if (!response.ok) throw new Error('Dashboard unavailable');
-        return response.json() as Promise<AnalyticsData>;
-      })
-      .then(setData)
-      .catch(() => setError(true));
+    void refreshAnalytics();
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) return;
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
+
+    const channel = supabase
+      .channel('admin-analytics-live')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'analytics_events' },
+        () => {
+          void refreshAnalytics();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, []);
 
   return (

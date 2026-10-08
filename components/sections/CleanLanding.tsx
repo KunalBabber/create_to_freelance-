@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { Check, ChevronDown, Menu } from 'lucide-react';
+import { BookOpen, Check, CheckCircle2, ChevronDown, Menu, Play, Sparkles } from 'lucide-react';
 import { landingCourse } from '@/data/landing-course';
 import { CTAButton } from '@/components/shared/CTAButton';
 import { LeadResources } from '@/components/sections/LeadResources';
@@ -79,15 +79,55 @@ function Hero() {
           ))}
         </ul>
       </div>
-      <div className="hero-banner">
-        <Image
-          src="/images/canva-creator-freelancer.png"
-          alt="Design with Canva: social media posts, video, Reels, carousel designs, and Canva AI"
-          fill
-          sizes="(min-width: 1024px) 55vw, 100vw"
-          priority
-          className="object-contain"
-        />
+      <div className="relative mx-auto w-full max-w-xl lg:justify-self-end">
+        <div className="absolute -inset-5 rounded-[2rem] bg-gradient-to-br from-blue-200/60 via-indigo-100/40 to-cyan-100/50 blur-2xl" />
+        <div className="relative overflow-hidden rounded-3xl border border-blue-100 bg-white p-3 shadow-2xl shadow-blue-900/15 sm:p-4">
+          <div className="rounded-2xl bg-slate-950 p-5 text-white sm:p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-300">Your learning dashboard</p>
+                <p className="mt-2 text-xl font-bold">Creative Skills Course</p>
+              </div>
+              <div className="grid h-11 w-11 place-items-center rounded-xl bg-blue-600">
+                <Sparkles className="h-5 w-5" aria-hidden="true" />
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-[1fr_auto] items-end gap-4 rounded-2xl bg-white/10 p-4">
+              <div>
+                <p className="text-xs text-slate-300">Course progress</p>
+                <p className="mt-1 text-2xl font-bold">82%</p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-full border-[5px] border-blue-500 border-r-blue-200 text-xs font-bold">82%</div>
+            </div>
+          </div>
+
+          <div className="grid gap-3 p-2 sm:grid-cols-2 sm:p-3">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center gap-3">
+                <div className="grid h-10 w-10 place-items-center rounded-xl bg-blue-100 text-blue-700"><BookOpen className="h-5 w-5" aria-hidden="true" /></div>
+                <div><p className="text-sm font-semibold text-slate-900">9 modules</p><p className="text-xs text-slate-500">Complete your journey</p></div>
+              </div>
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full w-4/5 rounded-full bg-blue-700" /></div>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex items-center gap-3">
+                <div className="grid h-10 w-10 place-items-center rounded-xl bg-violet-100 text-violet-700"><CheckCircle2 className="h-5 w-5" aria-hidden="true" /></div>
+                <div><p className="text-sm font-semibold text-slate-900">Portfolio projects</p><p className="text-xs text-slate-500">Build real work</p></div>
+              </div>
+              <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-emerald-700"><Check className="h-4 w-4" aria-hidden="true" /> Ready to create</div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 border-t border-slate-100 px-3 py-4 sm:px-4">
+            <div className="flex items-center gap-3"><div className="grid h-9 w-9 place-items-center rounded-full bg-blue-700 text-white"><Play className="ml-0.5 h-4 w-4 fill-current" aria-hidden="true" /></div><div><p className="text-sm font-semibold text-slate-900">Continue learning</p><p className="text-xs text-slate-500">Start your next lesson</p></div></div>
+            <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">Next lesson</span>
+          </div>
+        </div>
+        <div className="absolute -bottom-4 -left-4 hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-xl sm:block">
+          <p className="text-xs font-semibold text-slate-500">Practical projects</p>
+          <p className="mt-0.5 text-sm font-bold text-slate-900">Build. Share. Grow.</p>
+        </div>
       </div>
     </section>
   );

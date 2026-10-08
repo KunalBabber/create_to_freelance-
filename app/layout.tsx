@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   ),
   title: 'GrowLearnix | Canva, AI & Video Editing Course',
   description:
-    'A beginner-friendly Hindi and Hinglish course to learn Canva, AI tools, Reels editing, branding and practical portfolio projects. One-time payment of ₹499 + GST.',
+    'A beginner-friendly Hindi and Hinglish course to learn Canva, AI tools, Reels editing, branding and practical portfolio projects. One-time payment ₹499.',
   keywords: [
     'Canva course',
     'video editing course',
@@ -22,12 +22,12 @@ export const metadata: Metadata = {
     'AI for creators',
     'content creation',
     'creative projects',
-    '₹499 + GST course',
+    '₹499 course',
   ],
   openGraph: {
     title: 'GrowLearnix | Canva, AI & Video Editing Course',
     description:
-      'Learn Canva, AI tools, Reels editing, branding and practical portfolio projects in Hindi and Hinglish for ₹499 + GST.',
+      'Learn Canva, AI tools, Reels editing, branding and practical portfolio projects in Hindi and Hinglish for ₹499.',
     type: 'website',
     siteName: 'GrowLearnix',
   },
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'GrowLearnix | Canva, AI & Video Editing Course',
     description:
-      'A practical Hindi and Hinglish course for beginners. Learn Canva, AI, video editing and build real projects for ₹499 + GST.',
+      'A practical Hindi and Hinglish course for beginners. Learn Canva, AI, video editing and build real projects for ₹499.',
   },
   alternates: {
     canonical: '/',
@@ -56,12 +56,7 @@ const courseStructuredData = {
     '@type': 'Organization',
     name: 'GrowLearnix',
   },
-  offers: {
-    '@type': 'Offer',
-    price: '499',
-    priceCurrency: 'INR',
-    priceDescription: '₹499 + GST',
-  },
+  offers: { '@type': 'Offer', price: '499', priceCurrency: 'INR' },
 };
 
 const faqStructuredData = {
@@ -86,7 +81,7 @@ const faqStructuredData = {
     {
       '@type': 'Question',
       name: 'What is the course price?',
-      acceptedAnswer: { '@type': 'Answer', text: 'The complete course costs ₹499 + GST as a one-time payment.' },
+      acceptedAnswer: { '@type': 'Answer', text: 'The complete course costs ₹499 as a one-time payment.' },
     },
   ],
 };

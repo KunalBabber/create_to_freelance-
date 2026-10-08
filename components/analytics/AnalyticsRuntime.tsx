@@ -9,7 +9,7 @@ const measurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
 export function AnalyticsRuntime() {
   const pathname = usePathname();
-  const [choice, setChoice] = useState<'accepted' | 'rejected'>('accepted');
+  const [choice, setChoice] = useState<'accepted' | 'rejected'>(() => getConsentChoice() || 'accepted');
   const [lastTrackedPath, setLastTrackedPath] = useState<string | null>(null);
 
   useEffect(() => {
