@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { RefreshCw, Trash2 } from 'lucide-react';
 
@@ -34,20 +34,26 @@ export function AdminAnalyticsDashboard() {
   const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const refreshSequence = useRef(0);
+  const resetInProgress = useRef(false);
 
   async function refreshAnalytics() {
+    const requestSequence = ++refreshSequence.current;
     setLoading(true);
     setActionError('');
     try {
       const response = await fetch('/api/admin/analytics', { cache: 'no-store', credentials: 'same-origin' });
       if (!response.ok) throw new Error('Analytics data is unavailable.');
-      setData(await response.json() as AnalyticsData);
+      const nextData = await response.json() as AnalyticsData;
+      if (requestSequence !== refreshSequence.current) return;
+      setData(nextData);
       setError(false);
       setNotice('Analytics data refreshed.');
     } catch {
+      if (requestSequence !== refreshSequence.current) return;
       setActionError('Could not refresh analytics data.');
     } finally {
-      setLoading(false);
+      if (requestSequence === refreshSequence.current) setLoading(false);
     }
   }
 
@@ -57,6 +63,8 @@ export function AdminAnalyticsDashboard() {
     );
     if (!confirmed) return;
 
+    resetInProgress.current = true;
+    refreshSequence.current += 1;
     setResetting(true);
     setActionError('');
     setNotice('');
@@ -75,6 +83,7 @@ export function AdminAnalyticsDashboard() {
     } catch {
       setActionError('Could not reset analytics data. Check the server credentials and database permissions.');
     } finally {
+      resetInProgress.current = false;
       setResetting(false);
     }
   }
@@ -100,7 +109,7 @@ export function AdminAnalyticsDashboard() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'analytics_events' },
         () => {
-          void refreshAnalytics();
+          if (!resetInProgress.current) void refreshAnalytics();
         }
       )
       .subscribe();

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   ),
   title: 'GrowLearnix | Canva, AI & Video Editing Course',
   description:
-    'A beginner-friendly Hindi and Hinglish course to learn Canva, AI tools, Reels editing, branding and practical portfolio projects. One-time payment ₹499.',
+    'A beginner-friendly Hindi and Hinglish course to learn Canva, AI tools, Reels editing, branding and practical portfolio projects. One-time payment ₹499 + GST.',
   keywords: [
     'Canva course',
     'video editing course',
@@ -22,12 +22,12 @@ export const metadata: Metadata = {
     'AI for creators',
     'content creation',
     'creative projects',
-    '₹499 course',
+    '₹499 + GST course',
   ],
   openGraph: {
     title: 'GrowLearnix | Canva, AI & Video Editing Course',
     description:
-      'Learn Canva, AI tools, Reels editing, branding and practical portfolio projects in Hindi and Hinglish for ₹499.',
+      'Learn Canva, AI tools, Reels editing, branding and practical portfolio projects in Hindi and Hinglish for ₹499 + GST.',
     type: 'website',
     siteName: 'GrowLearnix',
   },
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'GrowLearnix | Canva, AI & Video Editing Course',
     description:
-      'A practical Hindi and Hinglish course for beginners. Learn Canva, AI, video editing and build real projects for ₹499.',
+      'A practical Hindi and Hinglish course for beginners. Learn Canva, AI, video editing and build real projects for ₹499 + GST.',
   },
   alternates: {
     canonical: '/',
@@ -81,7 +81,7 @@ const faqStructuredData = {
     {
       '@type': 'Question',
       name: 'What is the course price?',
-      acceptedAnswer: { '@type': 'Answer', text: 'The complete course costs ₹499 as a one-time payment.' },
+      acceptedAnswer: { '@type': 'Answer', text: 'The complete course costs ₹499 + GST as a one-time payment.' },
     },
   ],
 };

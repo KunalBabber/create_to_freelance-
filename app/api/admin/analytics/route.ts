@@ -25,45 +25,48 @@ export async function GET() {
     if (eventsError) throw eventsError;
 
     const events = (eventRows ?? []) as AnalyticsEvent[];
-    const pageViewEvents = events.filter((event) => event.event_name === 'page_view');
     const buyClickEvents = events.filter((event) => event.event_name === 'click_buy');
     const timeOnSiteEvents = events.filter((event) => event.event_name === 'time_on_site');
 
+    const sourceRows: Array<{
+      visitor_id: string | null;
+      session_id: string | null;
+      source: string | null;
+      utm_source: string | null;
+    }> = [];
+
+    const sourcePageSize = 1000;
+    let sourceOffset = 0;
+    let sourcePage: typeof sourceRows = [];
+    do {
+      const { data, error } = await supabase
+        .from('analytics_events')
+        .select('visitor_id, session_id, source, utm_source')
+        .in('event_name', ['page_view', 'time_on_site'])
+        .order('created_at', { ascending: false })
+        .range(sourceOffset, sourceOffset + sourcePageSize - 1);
+
+      if (error) throw error;
+      sourcePage = (data ?? []) as typeof sourceRows;
+      sourceRows.push(...sourcePage);
+
+      sourceOffset += sourcePage.length;
+    } while (sourcePage.length === sourcePageSize);
+
     const totalVisitors = new Set(
-      pageViewEvents
-        .map((event) => (event.session_id ?? event.visitor_id) as string | null)
+      sourceRows
+        .map((event) => event.session_id ?? event.visitor_id)
         .filter((value): value is string => Boolean(value))
     ).size;
 
     const uniqueVisitorKeys = new Set<string>();
-    for (const event of pageViewEvents) {
+    for (const event of sourceRows) {
       if (event.visitor_id) {
         uniqueVisitorKeys.add(`visitor:${event.visitor_id}`);
       } else if (event.session_id) {
         uniqueVisitorKeys.add(`session:${event.session_id}`);
       }
     }
-    const uniqueVisitors = uniqueVisitorKeys.size;
-
-    const sourceRows: Array<{ visitor_id: string | null; source: string | null; utm_source: string | null }> = [];
-
-    const sourcePageSize = 1000;
-    let sourceOffset = 0;
-    let sourcePage: Array<{ visitor_id: string | null; source: string | null; utm_source: string | null }> = [];
-    do {
-      const { data, error } = await supabase
-        .from('analytics_events')
-        .select('visitor_id, source, utm_source')
-        .eq('event_name', 'page_view')
-        .order('created_at', { ascending: false })
-        .range(sourceOffset, sourceOffset + sourcePageSize - 1);
-
-      if (error) throw error;
-      sourcePage = (data ?? []) as Array<{ visitor_id: string | null; source: string | null; utm_source: string | null }>;
-      sourceRows.push(...sourcePage);
-
-      sourceOffset += sourcePage.length;
-    } while (sourcePage.length === sourcePageSize);
 
     const sourceSummary = buildTrafficSourceList(sourceRows);
 
@@ -97,7 +100,7 @@ export async function GET() {
     return NextResponse.json(
       {
         totalVisitors,
-        uniqueVisitors,
+        uniqueVisitors: uniqueVisitorKeys.size,
         buyClicks: buyClickEvents.length,
         averageTimeSeconds,
         visitorTimes: visitorTimeList,
